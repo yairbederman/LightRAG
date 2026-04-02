@@ -230,6 +230,13 @@ class PostgreSQLDB:
                 # Return None for simple SSL requirement, handled in initdb
                 return None
 
+        # SSL without certificate verification (e.g. Supabase pooler)
+        if ssl_mode == "require-no-verify":
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            return context
+
         # For modes that require certificate verification
         if ssl_mode in ["verify-ca", "verify-full"]:
             try:
