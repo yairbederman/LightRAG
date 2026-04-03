@@ -394,7 +394,7 @@ POSTGRES_PORT=5432
 POSTGRES_USER=<YOUR_POOLER_USER>
 POSTGRES_PASSWORD='<YOUR_DB_PASSWORD>'
 POSTGRES_DATABASE=postgres
-POSTGRES_MAX_CONNECTIONS=25
+POSTGRES_MAX_CONNECTIONS=5   # Must be ≤ 1/3 of Supabase pooler "Connection pool size" (default 15 for Nano)
 POSTGRES_ENABLE_VECTOR=true
 POSTGRES_VECTOR_INDEX_TYPE=HNSW_HALFVEC
 POSTGRES_HNSW_M=16
@@ -404,6 +404,9 @@ POSTGRES_SSL_MODE=require-no-verify
 
 ###########################
 ### Storage (Supabase)
+### WARNING: Do NOT set WORKSPACE env var.
+### LightRAG defaults to 'default' internally.
+### Setting it causes a workspace mismatch.
 ###########################
 LIGHTRAG_KV_STORAGE=PGKVStorage
 LIGHTRAG_DOC_STATUS_STORAGE=PGDocStatusStorage
@@ -598,12 +601,171 @@ ls -la rag_storage/
 
 ---
 
-## Step 7: Next Steps (Optional)
+## Step 7: Enable OCR for Scanned PDFs (Optional)
+
+LightRAG can extract text from text-based PDFs, but **scanned PDFs** (image-only) need OCR. This step adds Google Cloud Vision as an automatic fallback.
+
+### 7a. Install dependencies
+
+```bash
+pip install google-cloud-vision pdf2image
+```
+
+### 7b. Install Poppler (system dependency for pdf2image)
+
+| OS | Command |
+|----|---------|
+| **Windows** | Download from [github.com/ossamamehmood/Poppler-windows/releases](https://github.com/ossamamehmood/Poppler-windows/releases), extract, add `bin/` folder to PATH |
+| **Linux** | `apt install poppler-utils` |
+| **macOS** | `brew install poppler` |
+
+### Verify
+```bash
+python -c "from pdf2image import convert_from_bytes; print('pdf2image: OK')"
+python -c "from google.cloud import vision; print('google-cloud-vision: OK')"
+```
+
+### 7c. Set up Google Cloud Vision
+
+**Option A: Quick setup via gcloud CLI (recommended for local dev)**
+
+```bash
+# 1. Install gcloud CLI if not already: https://cloud.google.com/sdk/docs/install
+# 2. Login:
+gcloud auth login
+
+# 3. Create a project:
+gcloud projects create lightrag-ocr --name="LightRAG OCR"
+
+# 4. Set it as default:
+gcloud config set project lightrag-ocr
+
+# 5. Enable Vision API:
+gcloud services enable vision.googleapis.com --project=lightrag-ocr
+
+# 6. Set application default credentials (opens browser):
+gcloud auth application-default login
+```
+
+**Option B: Service account key (for servers/CI)**
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Create a project (or use existing)
+3. Enable the **Cloud Vision API**: search "Cloud Vision API" in the console, click Enable
+4. Create credentials: **APIs & Services > Credentials > Create Service Account**
+5. Download the JSON key file
+6. Set the path in your environment:
+
+```bash
+# Add to .env or set in your shell:
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account-key.json
+```
+
+**Free tier:** 1,000 pages/month. Then $1.50 per 1,000 pages.
+
+### Verify
+```bash
+# Upload a scanned PDF and check it processes:
+curl -X POST http://localhost:9621/documents/upload -F "file=@scanned_doc.pdf"
+
+# Check logs for OCR activity:
+# Look for: [OCR] No text from pypdf for ..., trying Google Cloud Vision OCR
+```
+
+### How it works
+No configuration switch needed. The system **automatically detects** scanned PDFs:
+1. pypdf tries to extract text (existing behavior)
+2. If text is empty → Google Vision OCR kicks in automatically
+3. If google-cloud-vision is not installed → logs a warning and fails as before
+
+**Checkpoint:**
+- Scanned PDF processes successfully? OCR is working.
+- `[OCR] Scanned PDF detected but OCR not available` in logs? Check the install steps above.
+
+---
+
+## Step 8: Next Steps (Optional)
 
 - **Add authentication:** See `optimization/production-rollout-plan.md` Phase 1
 - **Invite team members:** Share the URL (http://YOUR_IP:9621) and set up auth first
 - **Upload real documents:** Use the WebUI at http://localhost:9621
-- **Supported file types:** `.txt`, `.md`, `.pdf`, `.docx`, `.html`, `.csv`
+- **Supported file types:** `.txt`, `.md`, `.pdf` (including scanned with OCR), `.docx`, `.pptx`, `.xlsx`, `.html`, `.csv`
+
+---
+
+## Document Processing: Who Handles What
+
+### File Type → Library Mapping
+
+| File Type | Library | What It Does |
+|-----------|---------|-------------|
+| `.txt`, `.md`, `.mdx`, `.html`, `.csv`, `.json`, `.xml`, `.yaml`, `.py`, `.js`, etc. | **Built-in** (UTF-8 read) | Reads file content directly as text |
+| `.pdf` (text layer present) | **pypdf** | Extracts text from PDF structure, page by page |
+| `.pdf` (encrypted) | **pypdf** + **pycryptodome** | Decrypts with `PDF_DECRYPT_PASSWORD`, then extracts |
+| `.pdf` (signed, not encrypted) | **pypdf** | Ignores signature, extracts text normally |
+| `.pdf` (scanned/image-only) | **Google Cloud Vision** + **pdf2image** | Converts pages to images, OCRs via Google API |
+| `.docx` | **python-docx** | Extracts paragraphs + tables in document order |
+| `.pptx` | **python-pptx** | Extracts text from all shapes across all slides |
+| `.xlsx` | **openpyxl** | Extracts all sheets as tab-delimited text |
+
+### Processing Flow
+
+```
+                         ┌──────────────────┐
+                         │  Upload File     │
+                         │  (WebUI or API)  │
+                         └────────┬─────────┘
+                                  │
+                         ┌────────▼─────────┐
+                         │  Check Extension  │
+                         └────────┬─────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              │                   │                   │
+     ┌────────▼──────┐  ┌────────▼──────┐  ┌────────▼────────┐
+     │ Text files    │  │ .pdf          │  │ .docx/.pptx     │
+     │ .txt .md .csv │  │               │  │ .xlsx           │
+     │ .html .json   │  │               │  │                 │
+     │ .py .js etc.  │  │               │  │                 │
+     └───────┬───────┘  └───────┬───────┘  └────────┬────────┘
+             │                  │                    │
+             │           ┌──────▼───────┐            │
+     ┌───────▼───────┐   │ pypdf        │   ┌───────▼────────┐
+     │ Read as UTF-8 │   │ extract text │   │ python-docx /  │
+     └───────┬───────┘   └──────┬───────┘   │ python-pptx /  │
+             │                  │            │ openpyxl       │
+             │           ┌──────▼───────┐   └───────┬────────┘
+             │           │ Text found?  │           │
+             │           └──┬───────┬───┘           │
+             │           Yes│       │No             │
+             │              │  ┌────▼──────────┐    │
+             │              │  │ OCR available? │    │
+             │              │  └──┬─────────┬──┘    │
+             │              │  Yes│         │No     │
+             │              │  ┌──▼───────┐ │       │
+             │              │  │ pdf2image │ │       │
+             │              │  │ → images  │ │       │
+             │              │  └────┬─────┘ │       │
+             │              │  ┌────▼──────┐│       │
+             │              │  │ Google    ││       │
+             │              │  │ Vision    ││       │
+             │              │  │ OCR       ││       │
+             │              │  └────┬─────┘│       │
+             │              │       │      │       │
+             ▼              ▼       ▼      ▼       ▼
+        ┌─────────────────────────────────────────────┐
+        │              Raw Text Content                │
+        └──────────────────────┬──────────────────────┘
+                               │
+        ┌──────────────────────▼──────────────────────┐
+        │           LightRAG Pipeline                  │
+        │  1. Chunk text (~1200 tokens each)           │
+        │  2. Generate embeddings (OpenAI)             │
+        │  3. Extract entities & relations (LLM)       │
+        │  4. Build knowledge graph                    │
+        │  5. Store in Supabase + NetworkX             │
+        └─────────────────────────────────────────────┘
+```
 
 ---
 
@@ -622,6 +784,9 @@ ls -la rag_storage/
 | Server shows "only whitespace" for PDF | Scanned image PDF, no text layer | Pre-process with OCR tool, then upload the text |
 | `Unknown SSL mode: require-no-verify` | Patch applied to source but not site-packages | Run: `python -c "import lightrag.kg.postgres_impl as m; print(m.__file__)"` and patch that file too |
 | Server starts but queries fail | OpenAI API key invalid or no credit | Test key: `curl https://api.openai.com/v1/models -H "Authorization: Bearer YOUR_KEY"` |
+| WebUI shows "No Documents" but data exists in DB | Workspace mismatch — data has one workspace value, server queries another | **Do NOT set the `WORKSPACE` env var.** LightRAG defaults to `'default'` internally. Setting it to empty or a different value causes a mismatch. If you suspect this issue, check: `SELECT DISTINCT workspace FROM lightrag_doc_status;` |
+| WebUI shows "No Documents", API hangs, health check works | `POSTGRES_MAX_CONNECTIONS` too high — pool exhausts Supabase pooler slots | Set `POSTGRES_MAX_CONNECTIONS` to ≤ 1/3 of Supabase pooler size. Default Nano pool is 15, so use `5`. Restart server after changing. |
+| `Max client connections reached` during document processing | Same — connection pool exceeds Supabase pooler limit | Same fix as above |
 
 ---
 

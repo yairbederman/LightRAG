@@ -1418,12 +1418,40 @@ async def pipeline_enqueue_file(
                                 logger.warning(
                                     f"DOCLING engine configured but not available for {file_path.name}. Falling back to pypdf."
                                 )
-                            # Use pypdf (non-blocking via to_thread)
-                            content = await asyncio.to_thread(
-                                _extract_pdf_pypdf,
-                                file,
-                                global_args.pdf_decrypt_password,
+
+                            # Pre-flight: classify PDF as scanned/text/mixed
+                            from lightrag.api.ocr_processor import (
+                                classify_pdf,
+                                is_ocr_available,
+                                ocr_pdf,
                             )
+
+                            pdf_type = classify_pdf(file)
+
+                            if pdf_type == "scanned" and is_ocr_available():
+                                logger.info(
+                                    f"[OCR] Scanned PDF detected: {file_path.name}, using Google Cloud Vision OCR"
+                                )
+                                content = await asyncio.to_thread(ocr_pdf, file)
+                            else:
+                                # Text-based, mixed, or unknown — try pypdf first
+                                content = await asyncio.to_thread(
+                                    _extract_pdf_pypdf,
+                                    file,
+                                    global_args.pdf_decrypt_password,
+                                )
+
+                                # Fallback to OCR if pypdf returned empty (mixed/unknown case)
+                                if (not content or not content.strip()) and is_ocr_available():
+                                    logger.info(
+                                        f"[OCR] No text from pypdf for {file_path.name} (type: {pdf_type}), trying OCR"
+                                    )
+                                    content = await asyncio.to_thread(ocr_pdf, file)
+                                elif not content or not content.strip():
+                                    logger.warning(
+                                        f"[OCR] Scanned PDF detected but OCR not available for {file_path.name}. "
+                                        "Install: pip install google-cloud-vision pdf2image"
+                                    )
                     except Exception as e:
                         error_files = [
                             {
