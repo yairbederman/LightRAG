@@ -243,6 +243,12 @@ Ollama models default to 8k context; LightRAG requires 32k+. Configure via:
 llm_model_kwargs={"options": {"num_ctx": 32768}}
 ```
 
+### 5. Workspace Mismatch (No Documents / No Query Results)
+**Symptom**: WebUI shows no documents, queries return `[no-context]`, but data exists in Supabase.
+**Cause**: `WORKSPACE` in `.env` doesn't match the workspace used during ingestion. All storage types and the NetworkX graph directory are workspace-scoped.
+**Solution**: Set `WORKSPACE=default` (or the ingestion value) in `.env`. Verify via `/health` — `configuration.workspace` must match. Ensure `rag_storage/<workspace>/graph_chunk_entity_relation.graphml` exists.
+**Rule**: `WORKSPACE` must always be explicitly set in `.env` when using PostgreSQL backends. Never rely on CLI flags alone.
+
 ## Configuration Files
 
 ### .env Configuration
