@@ -489,8 +489,73 @@ grep -c "<" .env
 ```
 
 **Checkpoint:**
-- Returns `0`? Proceed to Step 5.
+- Returns `0`? Proceed to Step 4b.
 - Returns a number? You still have `<PLACEHOLDER>` values to fill in.
+
+---
+
+## Step 4b: Configure Your Domain (config.md)
+
+LightRAG uses a `config.md` file to set domain-specific instructions that guide how the system answers queries. This is important — it tells the AI what kind of documents it's working with and how to respond.
+
+**Do this:**
+Create a file called `config.md` in the project root directory. Pick the template that matches your domain, or write your own.
+
+### Template: Legal Documents
+```markdown
+# System Configuration
+
+## User Prompt
+
+You are answering questions about legal documents. Accuracy is paramount.
+If uncertain about any detail, say so explicitly.
+Never paraphrase legal clauses — quote them directly.
+Always cite the specific document and section when possible.
+```
+
+### Template: Medical / Healthcare
+```markdown
+# System Configuration
+
+## User Prompt
+
+You are answering questions about medical documents and healthcare records.
+Always distinguish between established medical facts and preliminary findings.
+Never provide medical advice — only report what the documents state.
+Cite the specific document and section for every clinical finding mentioned.
+```
+
+### Template: Finance / Compliance
+```markdown
+# System Configuration
+
+## User Prompt
+
+You are answering questions about financial documents and regulatory filings.
+Accuracy with numbers, dates, and monetary amounts is critical.
+Always cite the specific document, section, and page when quoting figures.
+If a figure or requirement is ambiguous, state the ambiguity explicitly.
+```
+
+### Template: Generic (no domain-specific instructions)
+
+Skip this step — if `config.md` doesn't exist, the system works without domain-specific instructions.
+
+### How it works
+- The server reads `config.md` at startup
+- Content under the `## User Prompt` heading becomes the default instruction for all queries
+- Per-query instructions (via the API `user_prompt` parameter) override this default
+- To change domains, edit `config.md` and restart the server
+
+### Verify
+```bash
+# Check the file exists and has content:
+cat config.md
+```
+
+**Checkpoint:**
+- See your domain instructions? Proceed to Step 5.
+- Skipped this step? That's fine — proceed to Step 5.
 
 ---
 
@@ -673,13 +738,24 @@ curl -X POST http://localhost:9621/documents/upload -F "file=@scanned_doc.pdf"
 ```
 
 ### How it works
-No configuration switch needed. The system **automatically detects** scanned PDFs:
-1. pypdf tries to extract text (existing behavior)
-2. If text is empty → Google Vision OCR kicks in automatically
-3. If google-cloud-vision is not installed → logs a warning and fails as before
+No configuration switch needed. The system **automatically handles** all PDF types:
+
+| PDF type | What happens |
+|----------|-------------|
+| **Text-only** | pypdf extracts all pages — no OCR needed |
+| **Scanned (image-only)** | Automatically detected → full Google Cloud Vision OCR |
+| **Mixed (text + image pages)** | pypdf extracts text pages, then image pages (below 50-char threshold) are selectively OCR'd and merged |
+
+The 50-character threshold for detecting image pages is configurable via `config.md`:
+```markdown
+## OCR
+- Page Text Threshold: 50
+```
+Pages with fewer characters than this are treated as image pages and OCR'd. Increase for documents with sparse text pages; decrease if OCR is triggering on pages with small text.
 
 **Checkpoint:**
 - Scanned PDF processes successfully? OCR is working.
+- Mixed PDF extracts both text and image pages? Check logs for `[OCR] Mixed PDF ... running selective OCR`.
 - `[OCR] Scanned PDF detected but OCR not available` in logs? Check the install steps above.
 
 ---

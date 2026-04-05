@@ -129,13 +129,19 @@ class QueryRequest(BaseModel):
                 raise ValueError("Each message 'role' must be a non-empty string.")
         return conversation_history
 
-    def to_query_params(self, is_stream: bool) -> "QueryParam":
+    def to_query_params(
+        self, is_stream: bool, default_user_prompt: Optional[str] = None
+    ) -> "QueryParam":
         """Converts a QueryRequest instance into a QueryParam instance."""
         # Use Pydantic's `.model_dump(exclude_none=True)` to remove None values automatically
         # Exclude API-level parameters that don't belong in QueryParam
         request_data = self.model_dump(
             exclude_none=True, exclude={"query", "include_chunk_content"}
         )
+
+        # Apply default user_prompt from config.md if not provided per-query
+        if "user_prompt" not in request_data and default_user_prompt:
+            request_data["user_prompt"] = default_user_prompt
 
         # Ensure `mode` and `stream` are set explicitly
         param = QueryParam(**request_data)
@@ -190,7 +196,12 @@ class StreamChunkResponse(BaseModel):
     )
 
 
-def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
+def create_query_routes(
+    rag,
+    api_key: Optional[str] = None,
+    top_k: int = 60,
+    default_user_prompt: Optional[str] = None,
+):
     combined_auth = get_combined_auth_dependency(api_key)
 
     @router.post(
@@ -403,7 +414,7 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
         """
         try:
             param = request.to_query_params(
-                False
+                False, default_user_prompt
             )  # Ensure stream=False for non-streaming endpoint
             # Force stream=False for /query endpoint regardless of include_references setting
             param.stream = False
@@ -662,7 +673,7 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
         try:
             # Use the stream parameter from the request, defaulting to True if not specified
             stream_mode = request.stream if request.stream is not None else True
-            param = request.to_query_params(stream_mode)
+            param = request.to_query_params(stream_mode, default_user_prompt)
 
             from fastapi.responses import StreamingResponse
 
@@ -1139,7 +1150,7 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
             as structured data analysis typically requires source attribution.
         """
         try:
-            param = request.to_query_params(False)  # No streaming for data endpoint
+            param = request.to_query_params(False, default_user_prompt)  # No streaming for data endpoint
             response = await rag.aquery_data(request.query, param=param)
 
             # aquery_data returns the new format with status, message, data, and metadata

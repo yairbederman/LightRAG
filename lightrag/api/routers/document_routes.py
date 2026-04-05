@@ -3,6 +3,7 @@ This module contains all document-related routes for the LightRAG API.
 """
 
 import asyncio
+import os
 import time
 from uuid import uuid4
 from functools import lru_cache
@@ -983,15 +984,19 @@ def _convert_with_docling(file_path: Path) -> str:
     return result.document.export_to_markdown()
 
 
-def _extract_pdf_pypdf(file_bytes: bytes, password: str = None) -> str:
+def _extract_pdf_pypdf(
+    file_bytes: bytes, password: str = None, sparse_threshold: int = 50
+) -> tuple[str, list[int]]:
     """Extract PDF content using pypdf (synchronous).
 
     Args:
         file_bytes: PDF file content as bytes
         password: Optional password for encrypted PDFs
+        sparse_threshold: Pages with fewer chars than this are considered
+            image pages needing OCR (default 50)
 
     Returns:
-        str: Extracted text content
+        tuple of (extracted text, list of sparse page indices needing OCR)
 
     Raises:
         Exception: If PDF is encrypted and password is incorrect or missing
@@ -1011,12 +1016,17 @@ def _extract_pdf_pypdf(file_bytes: bytes, password: str = None) -> str:
             else:
                 raise Exception("PDF is encrypted but no password provided")
 
-    # Extract text from all pages
-    content = ""
-    for page in reader.pages:
-        content += page.extract_text() + "\n"
+    # Extract text from all pages, tracking sparse pages
+    page_texts = []
+    sparse_pages = []
+    for i, page in enumerate(reader.pages):
+        text = page.extract_text() or ""
+        page_texts.append(text)
+        if len(text.strip()) < sparse_threshold:
+            sparse_pages.append(i)
 
-    return content
+    content = "\n".join(page_texts)
+    return content, sparse_pages
 
 
 def _extract_docx(file_bytes: bytes) -> str:
@@ -1424,9 +1434,13 @@ async def pipeline_enqueue_file(
                                 classify_pdf,
                                 is_ocr_available,
                                 ocr_pdf,
+                                ocr_pdf_pages,
                             )
 
                             pdf_type = classify_pdf(file)
+                            ocr_threshold = int(
+                                os.getenv("OCR_PAGE_TEXT_THRESHOLD", "50")
+                            )
 
                             if pdf_type == "scanned" and is_ocr_available():
                                 logger.info(
@@ -1435,22 +1449,45 @@ async def pipeline_enqueue_file(
                                 content = await asyncio.to_thread(ocr_pdf, file)
                             else:
                                 # Text-based, mixed, or unknown — try pypdf first
-                                content = await asyncio.to_thread(
+                                content, sparse_pages = await asyncio.to_thread(
                                     _extract_pdf_pypdf,
                                     file,
                                     global_args.pdf_decrypt_password,
+                                    ocr_threshold,
                                 )
 
-                                # Fallback to OCR if pypdf returned empty (mixed/unknown case)
                                 if (not content or not content.strip()) and is_ocr_available():
+                                    # Completely empty — full OCR fallback
                                     logger.info(
                                         f"[OCR] No text from pypdf for {file_path.name} (type: {pdf_type}), trying OCR"
                                     )
                                     content = await asyncio.to_thread(ocr_pdf, file)
-                                elif not content or not content.strip():
+                                elif sparse_pages and is_ocr_available():
+                                    # Mixed PDF — OCR only the sparse pages
+                                    logger.info(
+                                        f"[OCR] Mixed PDF {file_path.name}: {len(sparse_pages)} pages below "
+                                        f"{ocr_threshold}-char threshold (pages {[p + 1 for p in sparse_pages]}), "
+                                        "running selective OCR"
+                                    )
+                                    ocr_results = await asyncio.to_thread(
+                                        ocr_pdf_pages, file, sparse_pages
+                                    )
+                                    if ocr_results:
+                                        # Merge OCR text into page-based content
+                                        page_texts = content.split("\n")
+                                        for page_num, ocr_text in ocr_results.items():
+                                            if page_num < len(page_texts):
+                                                page_texts[page_num] = ocr_text
+                                            else:
+                                                page_texts.append(ocr_text)
+                                        content = "\n".join(page_texts)
+                                        logger.info(
+                                            f"[OCR] Merged {len(ocr_results)} OCR pages into {file_path.name}"
+                                        )
+                                elif sparse_pages:
                                     logger.warning(
-                                        f"[OCR] Scanned PDF detected but OCR not available for {file_path.name}. "
-                                        "Install: pip install google-cloud-vision pdf2image"
+                                        f"[OCR] Mixed PDF {file_path.name} has {len(sparse_pages)} image pages "
+                                        "but OCR not available. Install: pip install google-cloud-vision pdf2image"
                                     )
                     except Exception as e:
                         error_files = [

@@ -1,6 +1,63 @@
 """
 LightRAG FastAPI Server
 """
+# ruff: noqa: E402 — config.md must load before imports that trigger argparse
+
+# --- config.md must load BEFORE any LightRAG imports ---
+# Some imports trigger argparse which reads env vars at import time.
+# config.md domain settings must be in os.environ before that happens.
+import os as _os
+import re as _re
+
+
+def _load_config_md_early(path: str = "config.md") -> dict:
+    if not _os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        result = {}
+        for section in _re.split(r"\n## ", content):
+            if not section.strip():
+                continue
+            lines = section.strip().split("\n")
+            heading = lines[0].strip().lstrip("#").strip()
+            body = "\n".join(lines[1:]).strip()
+            kv = {}
+            for line in body.split("\n"):
+                m = _re.match(r"^-\s+(.+?):\s+(.+)$", line.strip())
+                if m:
+                    kv[m.group(1).strip()] = m.group(2).strip()
+            result[heading] = kv if kv else body
+        return result
+    except Exception:
+        return {}
+
+
+_config_md = _load_config_md_early()
+_env_map = {
+    ("Display", "Title"): "WEBUI_TITLE",
+    ("Display", "Description"): "WEBUI_DESCRIPTION",
+    ("Language", "Summary Language"): "SUMMARY_LANGUAGE",
+    ("Model", "LLM Model"): "LLM_MODEL",
+    ("Model", "Rerank Binding"): "RERANK_BINDING",
+    ("Chunking", "Chunk Size"): "CHUNK_SIZE",
+    ("Chunking", "Chunk Overlap Size"): "CHUNK_OVERLAP_SIZE",
+    ("OCR", "Page Text Threshold"): "OCR_PAGE_TEXT_THRESHOLD",
+}
+for (_sec, _key), _env in _env_map.items():
+    _section = _config_md.get(_sec)
+    if isinstance(_section, dict) and _key in _section:
+        _os.environ[_env] = _section[_key]
+
+# Extract user prompt for query injection
+default_user_prompt = (
+    _config_md.get("User Prompt")
+    if isinstance(_config_md.get("User Prompt"), str)
+    else None
+)
+
+# --- End config.md early loading ---
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -65,12 +122,12 @@ from lightrag.kg.shared_storage import (
 from fastapi.security import OAuth2PasswordRequestForm
 from lightrag.api.auth import auth_handler
 
-# use the .env that is inside the current folder
-# allows to use different .env file for each lightrag instance
-# the OS environment variables take precedence over the .env file
+
+
+# .env fills in infrastructure settings NOT already set by config.md
 load_dotenv(dotenv_path=".env", override=False)
 
-
+# Read display settings after both config.md and .env are loaded
 webui_title = os.getenv("WEBUI_TITLE")
 webui_description = os.getenv("WEBUI_DESCRIPTION")
 
@@ -1108,11 +1165,15 @@ def create_app(args):
             api_key,
         )
     )
-    app.include_router(create_query_routes(rag, api_key, args.top_k))
+    app.include_router(
+        create_query_routes(rag, api_key, args.top_k, default_user_prompt)
+    )
     app.include_router(create_graph_routes(rag, api_key))
 
     # Add Ollama API routes
-    ollama_api = OllamaAPI(rag, top_k=args.top_k, api_key=api_key)
+    ollama_api = OllamaAPI(
+        rag, top_k=args.top_k, api_key=api_key, default_user_prompt=default_user_prompt
+    )
     app.include_router(ollama_api.router, prefix="/api")
 
     # Custom Swagger UI endpoint for offline support

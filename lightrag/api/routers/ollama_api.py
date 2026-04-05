@@ -218,11 +218,18 @@ def parse_query_mode(query: str) -> tuple[str, SearchMode, bool, Optional[str]]:
 
 
 class OllamaAPI:
-    def __init__(self, rag: LightRAG, top_k: int = 60, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        rag: LightRAG,
+        top_k: int = 60,
+        api_key: Optional[str] = None,
+        default_user_prompt: Optional[str] = None,
+    ):
         self.rag = rag
         self.ollama_server_infos = rag.ollama_server_infos
         self.top_k = top_k
         self.api_key = api_key
+        self.default_user_prompt = default_user_prompt
         self.router = APIRouter(tags=["ollama"])
         self.setup_routes()
 
@@ -506,9 +513,11 @@ class OllamaAPI:
                     "top_k": self.top_k,
                 }
 
-                # Add user_prompt to param_dict
+                # Add user_prompt to param_dict (per-query overrides default)
                 if user_prompt is not None:
                     param_dict["user_prompt"] = user_prompt
+                elif self.default_user_prompt:
+                    param_dict["user_prompt"] = self.default_user_prompt
 
                 query_param = QueryParam(**param_dict)
 

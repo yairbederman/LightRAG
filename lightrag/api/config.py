@@ -1,10 +1,46 @@
 """
 Configs for the LightRAG API.
 """
+# ruff: noqa: E402 — config.md must load before other imports read env vars
 
 import os
 import re
 import argparse
+
+# Load config.md domain settings into env vars before any get_env_value() calls.
+# This must happen at the top of config.py since parse_args() reads env vars.
+def _apply_config_md(path: str = "config.md") -> None:
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        env_map = {
+            ("Display", "Title"): "WEBUI_TITLE",
+            ("Display", "Description"): "WEBUI_DESCRIPTION",
+            ("Language", "Summary Language"): "SUMMARY_LANGUAGE",
+            ("Model", "LLM Model"): "LLM_MODEL",
+            ("Model", "Rerank Binding"): "RERANK_BINDING",
+            ("Chunking", "Chunk Size"): "CHUNK_SIZE",
+            ("Chunking", "Chunk Overlap Size"): "CHUNK_OVERLAP_SIZE",
+            ("OCR", "Page Text Threshold"): "OCR_PAGE_TEXT_THRESHOLD",
+        }
+        for section_text in re.split(r"\n## ", content):
+            if not section_text.strip():
+                continue
+            lines = section_text.strip().split("\n")
+            heading = lines[0].strip().lstrip("#").strip()
+            for line in lines[1:]:
+                m = re.match(r"^-\s+(.+?):\s+(.+)$", line.strip())
+                if m:
+                    key_pair = (heading, m.group(1).strip())
+                    env_var = env_map.get(key_pair)
+                    if env_var and env_var not in os.environ:
+                        os.environ[env_var] = m.group(2).strip()
+    except Exception:
+        pass
+
+_apply_config_md()
 import logging
 from dotenv import load_dotenv
 from lightrag.utils import get_env_value

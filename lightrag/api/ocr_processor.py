@@ -107,3 +107,46 @@ def ocr_pdf(file_bytes: bytes) -> str:
         raise Exception("OCR produced no text from scanned PDF")
 
     return "\n".join(all_text)
+
+
+def ocr_pdf_pages(file_bytes: bytes, page_numbers: list[int]) -> dict[int, str]:
+    """OCR only specific pages of a PDF.
+
+    Args:
+        file_bytes: PDF file content as bytes
+        page_numbers: Zero-based page indices to OCR
+
+    Returns:
+        dict mapping page number to OCR-extracted text
+    """
+    from google.cloud import vision
+    from pdf2image import convert_from_bytes
+
+    client = vision.ImageAnnotatorClient()
+    results = {}
+
+    for page_num in page_numbers:
+        # pdf2image uses 1-based page numbers
+        images = convert_from_bytes(
+            file_bytes, dpi=300, first_page=page_num + 1, last_page=page_num + 1
+        )
+        if not images:
+            continue
+
+        img_buffer = BytesIO()
+        images[0].save(img_buffer, format="PNG")
+        img_bytes = img_buffer.getvalue()
+
+        image = vision.Image(content=img_bytes)
+        response = client.document_text_detection(image=image)
+
+        if response.error.message:
+            logger.warning(
+                f"[OCR] Error on page {page_num + 1}: {response.error.message}"
+            )
+            continue
+
+        if response.full_text_annotation:
+            results[page_num] = response.full_text_annotation.text
+
+    return results
