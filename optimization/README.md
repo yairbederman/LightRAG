@@ -10,7 +10,7 @@ Dimensions evaluated: feature completeness, token efficiency, RAG accuracy (Engl
 |---|---|---|---|---|---|
 | 1 | [Enable Jina reranking](01-jina-reranking.md) | High | Low | Minutes | Pending |
 | 2 | [Add legal entity types](02-legal-entity-types.md) | High | Low | Minutes | Done |
-| 3 | [Hebrew few-shot prompts](03-hebrew-prompts.md) | High | Low | Hours | Pending |
+| 3 | [Hebrew few-shot prompts](03-hebrew-prompts.md) | High | Low | Hours | Done |
 | 4 | [Section-aware chunking](04-section-aware-chunking.md) | High | Medium | Days | Pending |
 | 5 | [Table-aware PDF extraction](05-table-extraction.md) | High | Medium | Days | Pending |
 | 6 | [Circuit breaker](06-circuit-breaker.md) | Medium | Low | Hours | Pending |

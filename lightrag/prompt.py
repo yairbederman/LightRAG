@@ -101,82 +101,108 @@ Based on the last extraction task, identify and extract any **missed or incorrec
 
 PROMPTS["entity_extraction_examples"] = [
     """<Entity_types>
-["Person","Creature","Organization","Location","Event","Concept","Method","Content","Data","Artifact","NaturalObject"]
+[{entity_types}]
 
 <Input Text>
 ```
-while Alex clenched his jaw, the buzz of frustration dull against the backdrop of Taylor's authoritarian certainty. It was this competitive undercurrent that kept him alert, the sense that his and Jordan's shared commitment to discovery was an unspoken rebellion against Cruz's narrowing vision of control and order.
+הסכם שכירות זה נערך ונחתם ביום 15.03.2024 בתל אביב, בין חברת אלפא נדל"ן בע"מ (להלן: "המשכיר") לבין מר דוד כהן, ת.ז. 012345678 (להלן: "השוכר").
 
-Then Taylor did something unexpected. They paused beside Jordan and, for a moment, observed the device with something akin to reverence. "If this tech can be understood..." Taylor said, their voice quieter, "It could change the game for us. For all of us."
+המשכיר מתחייב להעמיד לרשות השוכר את הנכס ברחוב הרצל 45, תל אביב, לתקופה של 36 חודשים החל מיום 01.05.2024. דמי השכירות החודשיים יעמדו על סך של 12,000 ש"ח בתוספת מע"מ, וישולמו עד ליום החמישי בכל חודש.
 
-The underlying dismissal earlier seemed to falter, replaced by a glimpse of reluctant respect for the gravity of what lay in their hands. Jordan looked up, and for a fleeting heartbeat, their eyes locked with Taylor's, a wordless clash of wills softening into an uneasy truce.
-
-It was a small transformation, barely perceptible, but one that Alex noted with an inward nod. They had all been brought here by different paths
+במידה והשוכר יפגר בתשלום דמי השכירות למעלה מ-30 יום, יחויב בריבית פיגורים בשיעור של 1.5% לחודש. כל סכסוך הנובע מהסכם זה יידון בבית משפט השלום בתל אביב בלבד, בהתאם לחוק השכירות והשאילה, התשל"א-1971.
 ```
 
 <Output>
-entity{tuple_delimiter}Alex{tuple_delimiter}person{tuple_delimiter}Alex is a character who experiences frustration and is observant of the dynamics among other characters.
-entity{tuple_delimiter}Taylor{tuple_delimiter}person{tuple_delimiter}Taylor is portrayed with authoritarian certainty and shows a moment of reverence towards a device, indicating a change in perspective.
-entity{tuple_delimiter}Jordan{tuple_delimiter}person{tuple_delimiter}Jordan shares a commitment to discovery and has a significant interaction with Taylor regarding a device.
-entity{tuple_delimiter}Cruz{tuple_delimiter}person{tuple_delimiter}Cruz is associated with a vision of control and order, influencing the dynamics among other characters.
-entity{tuple_delimiter}The Device{tuple_delimiter}equipment{tuple_delimiter}The Device is central to the story, with potential game-changing implications, and is revered by Taylor.
-relation{tuple_delimiter}Alex{tuple_delimiter}Taylor{tuple_delimiter}power dynamics, observation{tuple_delimiter}Alex observes Taylor's authoritarian behavior and notes changes in Taylor's attitude toward the device.
-relation{tuple_delimiter}Alex{tuple_delimiter}Jordan{tuple_delimiter}shared goals, rebellion{tuple_delimiter}Alex and Jordan share a commitment to discovery, which contrasts with Cruz's vision.)
-relation{tuple_delimiter}Taylor{tuple_delimiter}Jordan{tuple_delimiter}conflict resolution, mutual respect{tuple_delimiter}Taylor and Jordan interact directly regarding the device, leading to a moment of mutual respect and an uneasy truce.
-relation{tuple_delimiter}Jordan{tuple_delimiter}Cruz{tuple_delimiter}ideological conflict, rebellion{tuple_delimiter}Jordan's commitment to discovery is in rebellion against Cruz's vision of control and order.
-relation{tuple_delimiter}Taylor{tuple_delimiter}The Device{tuple_delimiter}reverence, technological significance{tuple_delimiter}Taylor shows reverence towards the device, indicating its importance and potential impact.
+entity{tuple_delimiter}אלפא נדל"ן בע"מ{tuple_delimiter}contractparty{tuple_delimiter}אלפא נדל"ן בע"מ היא חברה המשמשת כמשכיר בהסכם השכירות.
+entity{tuple_delimiter}דוד כהן{tuple_delimiter}contractparty{tuple_delimiter}דוד כהן הוא השוכר בהסכם השכירות, בעל ת.ז. 012345678.
+entity{tuple_delimiter}רחוב הרצל 45, תל אביב{tuple_delimiter}location{tuple_delimiter}רחוב הרצל 45, תל אביב הוא מיקום הנכס המושכר בהסכם.
+entity{tuple_delimiter}תל אביב{tuple_delimiter}location{tuple_delimiter}תל אביב היא העיר בה נחתם ההסכם ובה מצוי הנכס המושכר.
+entity{tuple_delimiter}תקופת השכירות{tuple_delimiter}deadline{tuple_delimiter}תקופת השכירות היא 36 חודשים, החל מיום 01.05.2024.
+entity{tuple_delimiter}12,000 ש"ח{tuple_delimiter}monetary{tuple_delimiter}דמי השכירות החודשיים עומדים על 12,000 ש"ח בתוספת מע"מ.
+entity{tuple_delimiter}תשלום עד ליום החמישי בחודש{tuple_delimiter}obligation{tuple_delimiter}השוכר מחויב לשלם את דמי השכירות עד ליום החמישי בכל חודש.
+entity{tuple_delimiter}ריבית פיגורים 1.5%{tuple_delimiter}legalclause{tuple_delimiter}סעיף ריבית הפיגורים קובע חיוב של 1.5% לחודש במקרה של פיגור בתשלום העולה על 30 יום.
+entity{tuple_delimiter}בית משפט השלום בתל אביב{tuple_delimiter}court{tuple_delimiter}בית משפט השלום בתל אביב הוא הערכאה המוסמכת לדון בסכסוכים הנובעים מההסכם.
+entity{tuple_delimiter}חוק השכירות והשאילה, התשל"א-1971{tuple_delimiter}statute{tuple_delimiter}חוק השכירות והשאילה, התשל"א-1971 הוא הדין החל על ההסכם.
+relation{tuple_delimiter}אלפא נדל"ן בע"מ{tuple_delimiter}דוד כהן{tuple_delimiter}יחסי שכירות, התחייבות חוזית{tuple_delimiter}אלפא נדל"ן בע"מ משכירה את הנכס לדוד כהן על פי תנאי ההסכם.
+relation{tuple_delimiter}דוד כהן{tuple_delimiter}12,000 ש"ח{tuple_delimiter}חובת תשלום, דמי שכירות{tuple_delimiter}דוד כהן מחויב לשלם דמי שכירות חודשיים בסך 12,000 ש"ח.
+relation{tuple_delimiter}דוד כהן{tuple_delimiter}תשלום עד ליום החמישי בחודש{tuple_delimiter}חובת תשלום, לוח זמנים{tuple_delimiter}דוד כהן מחויב לשלם את דמי השכירות עד ליום החמישי בכל חודש.
+relation{tuple_delimiter}ריבית פיגורים 1.5%{tuple_delimiter}דוד כהן{tuple_delimiter}סנקציה, פיגור בתשלום{tuple_delimiter}סעיף ריבית הפיגורים חל על דוד כהן במקרה של פיגור בתשלום מעל 30 יום.
+relation{tuple_delimiter}בית משפט השלום בתל אביב{tuple_delimiter}חוק השכירות והשאילה, התשל"א-1971{tuple_delimiter}סמכות שיפוט, דין חל{tuple_delimiter}בית משפט השלום בתל אביב ידון בסכסוכים מההסכם בהתאם לחוק השכירות והשאילה.
 {completion_delimiter}
 
 """,
     """<Entity_types>
-["Person","Creature","Organization","Location","Event","Concept","Method","Content","Data","Artifact","NaturalObject"]
+[{entity_types}]
 
 <Input Text>
 ```
-Stock markets faced a sharp downturn today as tech giants saw significant declines, with the global tech index dropping by 3.4% in midday trading. Analysts attribute the selloff to investor concerns over rising interest rates and regulatory uncertainty.
+בית המשפט המחוזי בירושלים
+ת"א 45678-09-23
+כבוד השופטת רחל לוי
 
-Among the hardest hit, nexon technologies saw its stock plummet by 7.8% after reporting lower-than-expected quarterly earnings. In contrast, Omega Energy posted a modest 2.1% gain, driven by rising oil prices.
+המבקשת: חברת גמא טכנולוגיות בע"מ
+המשיבה: עיריית ירושלים
 
-Meanwhile, commodity markets reflected a mixed sentiment. Gold futures rose by 1.5%, reaching $2,080 per ounce, as investors sought safe-haven assets. Crude oil prices continued their rally, climbing to $87.60 per barrel, supported by supply constraints and strong demand.
+החלטה
 
-Financial experts are closely watching the Federal Reserve's next move, as speculation grows over potential rate hikes. The upcoming policy announcement is expected to influence investor confidence and overall market stability.
+לאחר עיון בבקשה לצו מניעה זמני ובתשובת המשיבה, ולאחר שמיעת טענות הצדדים בדיון שנערך ביום 20.11.2023, מחליט בית המשפט כדלקמן:
+
+המבקשת טוענת כי המשיבה ביטלה שלא כדין את מכרז 2023/156 לאספקת מערכות מידע, בניגוד לתקנות חובת המכרזים, התשנ"ג-1993. סכום המכרז עמד על 5,200,000 ש"ח.
+
+לאחר בחינת הראיות, בית המשפט מקבל את הבקשה באופן חלקי. ניתן בזה צו מניעה זמני האוסר על המשיבה להתקשר עם צד שלישי כלשהו עד למתן החלטה בהליך העיקרי. המשיבה תישא בהוצאות המבקשת בסך 15,000 ש"ח.
 ```
 
 <Output>
-entity{tuple_delimiter}Global Tech Index{tuple_delimiter}category{tuple_delimiter}The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline today.
-entity{tuple_delimiter}Nexon Technologies{tuple_delimiter}organization{tuple_delimiter}Nexon Technologies is a tech company that saw its stock decline by 7.8% after disappointing earnings.
-entity{tuple_delimiter}Omega Energy{tuple_delimiter}organization{tuple_delimiter}Omega Energy is an energy company that gained 2.1% in stock value due to rising oil prices.
-entity{tuple_delimiter}Gold Futures{tuple_delimiter}product{tuple_delimiter}Gold futures rose by 1.5%, indicating increased investor interest in safe-haven assets.
-entity{tuple_delimiter}Crude Oil{tuple_delimiter}product{tuple_delimiter}Crude oil prices rose to $87.60 per barrel due to supply constraints and strong demand.
-entity{tuple_delimiter}Market Selloff{tuple_delimiter}category{tuple_delimiter}Market selloff refers to the significant decline in stock values due to investor concerns over interest rates and regulations.
-entity{tuple_delimiter}Federal Reserve Policy Announcement{tuple_delimiter}category{tuple_delimiter}The Federal Reserve's upcoming policy announcement is expected to impact investor confidence and market stability.
-entity{tuple_delimiter}3.4% Decline{tuple_delimiter}category{tuple_delimiter}The Global Tech Index experienced a 3.4% decline in midday trading.
-relation{tuple_delimiter}Global Tech Index{tuple_delimiter}Market Selloff{tuple_delimiter}market performance, investor sentiment{tuple_delimiter}The decline in the Global Tech Index is part of the broader market selloff driven by investor concerns.
-relation{tuple_delimiter}Nexon Technologies{tuple_delimiter}Global Tech Index{tuple_delimiter}company impact, index movement{tuple_delimiter}Nexon Technologies' stock decline contributed to the overall drop in the Global Tech Index.
-relation{tuple_delimiter}Gold Futures{tuple_delimiter}Market Selloff{tuple_delimiter}market reaction, safe-haven investment{tuple_delimiter}Gold prices rose as investors sought safe-haven assets during the market selloff.
-relation{tuple_delimiter}Federal Reserve Policy Announcement{tuple_delimiter}Market Selloff{tuple_delimiter}interest rate impact, financial regulation{tuple_delimiter}Speculation over Federal Reserve policy changes contributed to market volatility and investor selloff.
+entity{tuple_delimiter}בית המשפט המחוזי בירושלים{tuple_delimiter}court{tuple_delimiter}בית המשפט המחוזי בירושלים הוא הערכאה השיפוטית הדנה בתיק ת"א 45678-09-23.
+entity{tuple_delimiter}רחל לוי{tuple_delimiter}person{tuple_delimiter}השופטת רחל לוי היא השופטת היושבת בדין בתיק ומחליטה בבקשה לצו מניעה זמני.
+entity{tuple_delimiter}גמא טכנולוגיות בע"מ{tuple_delimiter}contractparty{tuple_delimiter}גמא טכנולוגיות בע"מ היא המבקשת בהליך, הטוענת לביטול שלא כדין של מכרז.
+entity{tuple_delimiter}עיריית ירושלים{tuple_delimiter}contractparty{tuple_delimiter}עיריית ירושלים היא המשיבה בהליך, שביטלה את המכרז.
+entity{tuple_delimiter}מכרז 2023/156{tuple_delimiter}legalclause{tuple_delimiter}מכרז 2023/156 הוא מכרז לאספקת מערכות מידע שבוטל על ידי עיריית ירושלים.
+entity{tuple_delimiter}5,200,000 ש"ח{tuple_delimiter}monetary{tuple_delimiter}סכום המכרז עמד על 5,200,000 ש"ח.
+entity{tuple_delimiter}צו מניעה זמני{tuple_delimiter}legalterm{tuple_delimiter}צו מניעה זמני הוא סעד זמני האוסר על המשיבה להתקשר עם צד שלישי עד להחלטה בהליך העיקרי.
+entity{tuple_delimiter}תקנות חובת המכרזים, התשנ"ג-1993{tuple_delimiter}statute{tuple_delimiter}תקנות חובת המכרזים, התשנ"ג-1993 הן הדין שלטענת המבקשת הופר בביטול המכרז.
+entity{tuple_delimiter}15,000 ש"ח{tuple_delimiter}monetary{tuple_delimiter}סכום ההוצאות שנפסק לטובת המבקשת עומד על 15,000 ש"ח.
+relation{tuple_delimiter}גמא טכנולוגיות בע"מ{tuple_delimiter}עיריית ירושלים{tuple_delimiter}סכסוך משפטי, ביטול מכרז{tuple_delimiter}גמא טכנולוגיות בע"מ תובעת את עיריית ירושלים בגין ביטול שלא כדין של מכרז 2023/156.
+relation{tuple_delimiter}עיריית ירושלים{tuple_delimiter}מכרז 2023/156{tuple_delimiter}ביטול, החלטה מנהלית{tuple_delimiter}עיריית ירושלים ביטלה את מכרז 2023/156 לאספקת מערכות מידע.
+relation{tuple_delimiter}בית המשפט המחוזי בירושלים{tuple_delimiter}צו מניעה זמני{tuple_delimiter}סעד שיפוטי, החלטה{tuple_delimiter}בית המשפט המחוזי בירושלים נתן צו מניעה זמני חלקי בהליך.
+relation{tuple_delimiter}מכרז 2023/156{tuple_delimiter}תקנות חובת המכרזים, התשנ"ג-1993{tuple_delimiter}הפרה נטענת, דין חל{tuple_delimiter}לטענת המבקשת, ביטול המכרז נעשה בניגוד לתקנות חובת המכרזים.
+relation{tuple_delimiter}עיריית ירושלים{tuple_delimiter}15,000 ש"ח{tuple_delimiter}הוצאות משפט, חיוב{tuple_delimiter}עיריית ירושלים חויבה בהוצאות המבקשת בסך 15,000 ש"ח.
 {completion_delimiter}
 
 """,
     """<Entity_types>
-["Person","Creature","Organization","Location","Event","Concept","Method","Content","Data","Artifact","NaturalObject"]
+[{entity_types}]
 
 <Input Text>
 ```
-At the World Athletics Championship in Tokyo, Noah Carter broke the 100m sprint record using cutting-edge carbon-fiber spikes.
+כתב תביעה
+
+התובע: יוסף אברהמי, ת.ז. 987654321, רחוב ויצמן 12, חיפה
+הנתבעת: חברת דלתא ביטוח בע"מ
+
+בית המשפט השלום בחיפה מתבקש לחייב את הנתבעת לשלם לתובע פיצויים בסך 280,000 ש"ח בגין דחיית תביעת ביטוח שלא כדין.
+
+עובדות התביעה: ביום 10.06.2023 ארע לתובע אירוע ביטוחי המכוסה על פי פוליסת ביטוח מקיף מספר 7891011. התובע הגיש תביעה כנדרש תוך 30 יום מיום האירוע. הנתבעת דחתה את התביעה ביום 15.08.2023 בטענת כוח עליון, ללא ביסוס עובדתי מספק.
+
+התובע טוען כי הדחייה מנוגדת לסעיף 28 לחוק חוזה הביטוח, התשמ"א-1981, הקובע כי על המבטח לפעול בתום לב ולנמק את דחיית התביעה באופן מפורט.
 ```
 
 <Output>
-entity{tuple_delimiter}World Athletics Championship{tuple_delimiter}event{tuple_delimiter}The World Athletics Championship is a global sports competition featuring top athletes in track and field.
-entity{tuple_delimiter}Tokyo{tuple_delimiter}location{tuple_delimiter}Tokyo is the host city of the World Athletics Championship.
-entity{tuple_delimiter}Noah Carter{tuple_delimiter}person{tuple_delimiter}Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.
-entity{tuple_delimiter}100m Sprint Record{tuple_delimiter}category{tuple_delimiter}The 100m sprint record is a benchmark in athletics, recently broken by Noah Carter.
-entity{tuple_delimiter}Carbon-Fiber Spikes{tuple_delimiter}equipment{tuple_delimiter}Carbon-fiber spikes are advanced sprinting shoes that provide enhanced speed and traction.
-entity{tuple_delimiter}World Athletics Federation{tuple_delimiter}organization{tuple_delimiter}The World Athletics Federation is the governing body overseeing the World Athletics Championship and record validations.
-relation{tuple_delimiter}World Athletics Championship{tuple_delimiter}Tokyo{tuple_delimiter}event location, international competition{tuple_delimiter}The World Athletics Championship is being hosted in Tokyo.
-relation{tuple_delimiter}Noah Carter{tuple_delimiter}100m Sprint Record{tuple_delimiter}athlete achievement, record-breaking{tuple_delimiter}Noah Carter set a new 100m sprint record at the championship.
-relation{tuple_delimiter}Noah Carter{tuple_delimiter}Carbon-Fiber Spikes{tuple_delimiter}athletic equipment, performance boost{tuple_delimiter}Noah Carter used carbon-fiber spikes to enhance performance during the race.
-relation{tuple_delimiter}Noah Carter{tuple_delimiter}World Athletics Championship{tuple_delimiter}athlete participation, competition{tuple_delimiter}Noah Carter is competing at the World Athletics Championship.
+entity{tuple_delimiter}יוסף אברהמי{tuple_delimiter}contractparty{tuple_delimiter}יוסף אברהמי הוא התובע בהליך, מבוטח שתביעת הביטוח שלו נדחתה, מתגורר ברחוב ויצמן 12, חיפה.
+entity{tuple_delimiter}דלתא ביטוח בע"מ{tuple_delimiter}contractparty{tuple_delimiter}דלתא ביטוח בע"מ היא הנתבעת, חברת הביטוח שדחתה את תביעת המבוטח.
+entity{tuple_delimiter}בית המשפט השלום בחיפה{tuple_delimiter}court{tuple_delimiter}בית המשפט השלום בחיפה הוא הערכאה אליה הוגש כתב התביעה.
+entity{tuple_delimiter}חיפה{tuple_delimiter}location{tuple_delimiter}חיפה היא עיר מגוריו של התובע ומיקום בית המשפט.
+entity{tuple_delimiter}280,000 ש"ח{tuple_delimiter}monetary{tuple_delimiter}סכום הפיצויים הנתבע עומד על 280,000 ש"ח בגין דחיית תביעת ביטוח שלא כדין.
+entity{tuple_delimiter}פוליסת ביטוח מקיף 7891011{tuple_delimiter}legalclause{tuple_delimiter}פוליסת ביטוח מקיף מספר 7891011 היא הפוליסה שמכוחה הגיש התובע את תביעת הביטוח.
+entity{tuple_delimiter}הגשת תביעה תוך 30 יום{tuple_delimiter}obligation{tuple_delimiter}התובע מילא את חובתו להגיש תביעה תוך 30 יום מיום האירוע הביטוחי.
+entity{tuple_delimiter}דחיית התביעה{tuple_delimiter}deadline{tuple_delimiter}הנתבעת דחתה את תביעת הביטוח ביום 15.08.2023.
+entity{tuple_delimiter}כוח עליון{tuple_delimiter}legalterm{tuple_delimiter}כוח עליון הוא הטענה המשפטית שבגינה דחתה הנתבעת את תביעת הביטוח, ללא ביסוס עובדתי מספק.
+entity{tuple_delimiter}סעיף 28 לחוק חוזה הביטוח, התשמ"א-1981{tuple_delimiter}statute{tuple_delimiter}סעיף 28 לחוק חוזה הביטוח, התשמ"א-1981 קובע כי על המבטח לפעול בתום לב ולנמק דחיית תביעה באופן מפורט.
+relation{tuple_delimiter}יוסף אברהמי{tuple_delimiter}דלתא ביטוח בע"מ{tuple_delimiter}תביעת פיצויים, סכסוך ביטוחי{tuple_delimiter}יוסף אברהמי תובע את דלתא ביטוח בע"מ בגין דחיית תביעת ביטוח שלא כדין.
+relation{tuple_delimiter}יוסף אברהמי{tuple_delimiter}פוליסת ביטוח מקיף 7891011{tuple_delimiter}מבוטח, זכויות ביטוח{tuple_delimiter}יוסף אברהמי הוא המבוטח על פי פוליסה מספר 7891011.
+relation{tuple_delimiter}דלתא ביטוח בע"מ{tuple_delimiter}כוח עליון{tuple_delimiter}טענת הגנה, עילת דחייה{tuple_delimiter}דלתא ביטוח בע"מ דחתה את התביעה בטענת כוח עליון ללא ביסוס מספק.
+relation{tuple_delimiter}דלתא ביטוח בע"מ{tuple_delimiter}סעיף 28 לחוק חוזה הביטוח, התשמ"א-1981{tuple_delimiter}הפרה נטענת, חובת תום לב{tuple_delimiter}לטענת התובע, דחיית התביעה מנוגדת לסעיף 28 לחוק חוזה הביטוח המחייב נימוק מפורט.
+relation{tuple_delimiter}יוסף אברהמי{tuple_delimiter}280,000 ש"ח{tuple_delimiter}סעד כספי, פיצויים{tuple_delimiter}יוסף אברהמי תובע פיצויים בסך 280,000 ש"ח.
 {completion_delimiter}
 
 """,

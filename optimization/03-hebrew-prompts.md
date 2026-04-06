@@ -57,8 +57,8 @@ Hebrew legal text example with prefixed articles, construct state, etc.
 
 ## Decision
 
-- [ ] Approved
+- [x] Approved
 - [ ] Deferred
 - [ ] Rejected
 
-Notes:
+Notes: Applied 2026-04-06. Replaced 3 English examples (fiction, finance, sports) with 3 Hebrew legal examples: הסכם שכירות (agreement), החלטת בית משפט (court ruling), כתב תביעה (statement of claim). Examples use legal entity types from config.md. ~2500 tokens total. Affects ingestion only.
