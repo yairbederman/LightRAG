@@ -496,7 +496,7 @@ grep -c "<" .env
 
 ## Step 4b: Configure Your Domain (config.md)
 
-LightRAG uses a `config.md` file to set domain-specific instructions that guide how the system answers queries. This is important — it tells the AI what kind of documents it's working with and how to respond.
+LightRAG uses a `config.md` file to set domain-specific configuration — both the **entity types** the system extracts during ingestion and the **user prompt** that guides how it answers queries. This is important: entity types determine what the knowledge graph captures, and the user prompt shapes response style.
 
 **Do this:**
 Create a file called `config.md` in the project root directory. Pick the template that matches your domain, or write your own.
@@ -504,6 +504,10 @@ Create a file called `config.md` in the project root directory. Pick the templat
 ### Template: Legal Documents
 ```markdown
 # System Configuration
+
+## Extraction
+
+- Entity Types: ["Person","Organization","Location","ContractParty","LegalClause","Obligation","Deadline","Court","Statute","LegalTerm","Monetary"]
 
 ## User Prompt
 
@@ -517,6 +521,10 @@ Always cite the specific document and section when possible.
 ```markdown
 # System Configuration
 
+## Extraction
+
+- Entity Types: ["Person","Organization","Location","Patient","Condition","Treatment","Medication","Symptom","Procedure","MedicalDevice","ClinicalTrial"]
+
 ## User Prompt
 
 You are answering questions about medical documents and healthcare records.
@@ -529,6 +537,10 @@ Cite the specific document and section for every clinical finding mentioned.
 ```markdown
 # System Configuration
 
+## Extraction
+
+- Entity Types: ["Person","Organization","Location","FinancialInstrument","Transaction","Account","Regulation","RiskFactor","Currency","Deadline","Monetary"]
+
 ## User Prompt
 
 You are answering questions about financial documents and regulatory filings.
@@ -537,13 +549,35 @@ Always cite the specific document, section, and page when quoting figures.
 If a figure or requirement is ambiguous, state the ambiguity explicitly.
 ```
 
+### Template: Real Estate
+```markdown
+# System Configuration
+
+## Extraction
+
+- Entity Types: ["Person","Organization","Location","Property","LegalClause","Obligation","Deadline","Zoning","Permit","Monetary","Parcel"]
+
+## User Prompt
+
+You are answering questions about real estate documents, property records, and land use filings.
+Always cite the specific document, section, and parcel number when referencing properties.
+Distinguish between current status and historical records.
+```
+
 ### Template: Generic (no domain-specific instructions)
 
-Skip this step — if `config.md` doesn't exist, the system works without domain-specific instructions.
+Skip this step — if `config.md` doesn't exist, the system uses default entity types (Person, Organization, Location, Event, Concept, etc.) and no domain-specific user prompt.
 
-### How it works
+### How entity types work
+- Entity types define the **categories** the LLM uses when extracting entities from documents during ingestion
+- Keep to ~11 types total — too many confuses the LLM, too few loses precision
+- Always retain **Person, Organization, Location** as base types — they apply to every domain
+- Entity types **only affect ingestion** — queries benefit indirectly from more precise entity descriptions and graph structure
+- Changing entity types requires **re-ingestion** of existing documents to take effect
+
+### How the user prompt works
 - The server reads `config.md` at startup
-- Content under the `## User Prompt` heading becomes the default instruction for all queries
+- Content under `## User Prompt` becomes the default instruction for all queries
 - Per-query instructions (via the API `user_prompt` parameter) override this default
 - To change domains, edit `config.md` and restart the server
 
@@ -554,7 +588,7 @@ cat config.md
 ```
 
 **Checkpoint:**
-- See your domain instructions? Proceed to Step 5.
+- See your domain instructions and entity types? Proceed to Step 5.
 - Skipped this step? That's fine — proceed to Step 5.
 
 ---

@@ -23,6 +23,10 @@
 
 - Page Text Threshold: 50
 
+## Extraction
+
+- Entity Types: ["Person","Organization","Location","ContractParty","LegalClause","Obligation","Deadline","Court","Statute","LegalTerm","Monetary"]
+
 ## Concurrency
 
 <!-- Supabase Nano pooler has 15 connection slots total.

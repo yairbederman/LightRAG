@@ -43,6 +43,7 @@ def _apply_config_md(path: str = "config.md") -> None:
             ("OCR", "Page Text Threshold"): "OCR_PAGE_TEXT_THRESHOLD",
             ("Concurrency", "Max Parallel Insert"): "MAX_PARALLEL_INSERT",
             ("Concurrency", "Max DB Connections"): "POSTGRES_MAX_CONNECTIONS",
+            ("Extraction", "Entity Types"): "ENTITY_TYPES",
         }
         for section_text in re.split(r"\n## ", content):
             if not section_text.strip():
