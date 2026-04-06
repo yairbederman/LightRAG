@@ -81,6 +81,15 @@ memory-bank
 
 # Claude Code
 CLAUDE.md
+.agents/
+skills-lock.json
+
+# Node tooling artifacts (not a Node project)
+package.json
+package-lock.json
+
+# Supabase CLI temp files
+supabase/.temp/
 
 # Google Jules
 .jules/

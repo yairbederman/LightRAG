@@ -10,7 +10,27 @@ import os as _os
 import re as _re
 
 
+def _find_project_root() -> str:
+    """Find project root by locating .env, falling back to CWD."""
+    # Walk up from CWD looking for .env (same heuristic as load_dotenv)
+    d = _os.path.abspath(_os.getcwd())
+    for _ in range(10):
+        if _os.path.isfile(_os.path.join(d, ".env")):
+            return d
+        parent = _os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return _os.getcwd()
+
+
+_project_root = _find_project_root()
+
+
 def _load_config_md_early(path: str = "config.md") -> dict:
+    # Resolve relative to project root so entry-point CWD doesn't matter
+    if not _os.path.isabs(path):
+        path = _os.path.join(_project_root, path)
     if not _os.path.exists(path):
         return {}
     try:
@@ -44,6 +64,8 @@ _env_map = {
     ("Chunking", "Chunk Size"): "CHUNK_SIZE",
     ("Chunking", "Chunk Overlap Size"): "CHUNK_OVERLAP_SIZE",
     ("OCR", "Page Text Threshold"): "OCR_PAGE_TEXT_THRESHOLD",
+    ("Concurrency", "Max Parallel Insert"): "MAX_PARALLEL_INSERT",
+    ("Concurrency", "Max DB Connections"): "POSTGRES_MAX_CONNECTIONS",
 }
 for (_sec, _key), _env in _env_map.items():
     _section = _config_md.get(_sec)
@@ -125,7 +147,7 @@ from lightrag.api.auth import auth_handler
 
 
 # .env fills in infrastructure settings NOT already set by config.md
-load_dotenv(dotenv_path=".env", override=False)
+load_dotenv(dotenv_path=os.path.join(_project_root, ".env"), override=False)
 
 # Read display settings after both config.md and .env are loaded
 webui_title = os.getenv("WEBUI_TITLE")

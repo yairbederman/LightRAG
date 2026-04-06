@@ -9,7 +9,24 @@ import argparse
 
 # Load config.md domain settings into env vars before any get_env_value() calls.
 # This must happen at the top of config.py since parse_args() reads env vars.
+def _find_project_root() -> str:
+    """Find project root by locating .env, falling back to CWD."""
+    d = os.path.abspath(os.getcwd())
+    for _ in range(10):
+        if os.path.isfile(os.path.join(d, ".env")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return os.getcwd()
+
+
+_project_root = _find_project_root()
 def _apply_config_md(path: str = "config.md") -> None:
+    # Resolve relative to project root so entry-point CWD doesn't matter
+    if not os.path.isabs(path):
+        path = os.path.join(_project_root, path)
     if not os.path.exists(path):
         return
     try:
@@ -24,6 +41,8 @@ def _apply_config_md(path: str = "config.md") -> None:
             ("Chunking", "Chunk Size"): "CHUNK_SIZE",
             ("Chunking", "Chunk Overlap Size"): "CHUNK_OVERLAP_SIZE",
             ("OCR", "Page Text Threshold"): "OCR_PAGE_TEXT_THRESHOLD",
+            ("Concurrency", "Max Parallel Insert"): "MAX_PARALLEL_INSERT",
+            ("Concurrency", "Max DB Connections"): "POSTGRES_MAX_CONNECTIONS",
         }
         for section_text in re.split(r"\n## ", content):
             if not section_text.strip():
@@ -80,10 +99,10 @@ from lightrag.constants import (
     DEFAULT_ENTITY_TYPES,
 )
 
-# use the .env that is inside the current folder
+# use the .env that is inside the project root
 # allows to use different .env file for each lightrag instance
 # the OS environment variables take precedence over the .env file
-load_dotenv(dotenv_path=".env", override=False)
+load_dotenv(dotenv_path=os.path.join(_project_root, ".env"), override=False)
 
 
 ollama_server_infos = OllamaServerInfos()
