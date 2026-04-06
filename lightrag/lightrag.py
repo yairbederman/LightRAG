@@ -87,7 +87,8 @@ from lightrag.base import (
 )
 from lightrag.namespace import NameSpace
 from lightrag.operate import (
-    chunking_by_token_size,
+    chunking_by_token_size,  # noqa: F401 — public API, used in tests and user code
+    chunking_by_paragraph_aware,
     extract_entities,
     merge_nodes_and_edges,
     kg_query,
@@ -339,7 +340,7 @@ class LightRAG:
             int,
         ],
         Union[List[Dict[str, Any]], Awaitable[List[Dict[str, Any]]]],
-    ] = field(default_factory=lambda: chunking_by_token_size)
+    ] = field(default_factory=lambda: chunking_by_paragraph_aware)
     """
     Custom chunking function for splitting text into chunks before processing.
 

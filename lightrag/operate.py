@@ -164,6 +164,102 @@ def chunking_by_token_size(
     return results
 
 
+def chunking_by_paragraph_aware(
+    tokenizer: Tokenizer,
+    content: str,
+    split_by_character: str | None = None,
+    split_by_character_only: bool = False,
+    chunk_overlap_token_size: int = 100,
+    chunk_token_size: int = 1200,
+) -> list[dict[str, Any]]:
+    """Split text on paragraph boundaries, grouping paragraphs into chunks
+    up to chunk_token_size. Never splits mid-paragraph unless a single
+    paragraph exceeds the token limit (falls back to token-based splitting).
+
+    Same signature as chunking_by_token_size for drop-in compatibility.
+    split_by_character and split_by_character_only are accepted but ignored
+    — this function always splits on paragraph boundaries.
+    """
+    import re
+
+    # Split on paragraph boundaries (one or more blank lines)
+    paragraphs = re.split(r"\n\s*\n", content)
+    # Remove empty paragraphs from splitting artifacts
+    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+    if not paragraphs:
+        return []
+
+    results: list[dict[str, Any]] = []
+    current_chunks: list[str] = []
+    current_tokens = 0
+    chunk_index = 0
+
+    for para in paragraphs:
+        para_tokens = len(tokenizer.encode(para))
+
+        # Case 1: Single paragraph exceeds token limit — fall back to token splitting
+        if para_tokens > chunk_token_size:
+            # Flush any accumulated paragraphs first
+            if current_chunks:
+                results.append(
+                    {
+                        "tokens": current_tokens,
+                        "content": "\n\n".join(current_chunks),
+                        "chunk_order_index": chunk_index,
+                    }
+                )
+                chunk_index += 1
+                current_chunks = []
+                current_tokens = 0
+
+            # Split the oversized paragraph by tokens
+            tokens = tokenizer.encode(para)
+            step = chunk_token_size - chunk_overlap_token_size
+            for start in range(0, len(tokens), step):
+                chunk_content = tokenizer.decode(
+                    tokens[start : start + chunk_token_size]
+                )
+                results.append(
+                    {
+                        "tokens": min(chunk_token_size, len(tokens) - start),
+                        "content": chunk_content.strip(),
+                        "chunk_order_index": chunk_index,
+                    }
+                )
+                chunk_index += 1
+            continue
+
+        # Case 2: Adding this paragraph would exceed the limit — flush current chunk
+        if current_tokens + para_tokens > chunk_token_size and current_chunks:
+            results.append(
+                {
+                    "tokens": current_tokens,
+                    "content": "\n\n".join(current_chunks),
+                    "chunk_order_index": chunk_index,
+                }
+            )
+            chunk_index += 1
+            current_chunks = []
+            current_tokens = 0
+
+        # Accumulate paragraph into current chunk
+        current_chunks.append(para)
+        current_tokens += para_tokens
+
+    # Flush remaining paragraphs
+    if current_chunks:
+        results.append(
+            {
+                "tokens": current_tokens,
+                "content": "\n\n".join(current_chunks),
+                "chunk_order_index": chunk_index,
+            }
+        )
+
+    return results
+
+
 async def _handle_entity_relation_summary(
     description_type: str,
     entity_or_relation_name: str,
