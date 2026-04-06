@@ -62,3 +62,5 @@ Hebrew legal text example with prefixed articles, construct state, etc.
 - [ ] Rejected
 
 Notes: Applied 2026-04-06. Replaced 3 English examples (fiction, finance, sports) with 3 Hebrew legal examples: הסכם שכירות (agreement), החלטת בית משפט (court ruling), כתב תביעה (statement of claim). Examples use legal entity types from config.md. ~2500 tokens total. Affects ingestion only.
+
+**Coupling warning:** The extraction output in these examples is hardcoded with legal entity types (contractparty, court, statute, etc.). If a non-legal client changes `ENTITY_TYPES` in config.md (e.g., to medical types), the examples will contradict the configured types — the header shows the correct types but the example output still references legal types. For multi-domain deployments, implement per-domain example sets via separate prompt files (prompts_he.py, prompts_medical.py, etc.) with a loader that selects based on config.

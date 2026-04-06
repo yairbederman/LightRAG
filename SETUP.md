@@ -574,6 +574,7 @@ Skip this step — if `config.md` doesn't exist, the system uses default entity 
 - Always retain **Person, Organization, Location** as base types — they apply to every domain
 - Entity types **only affect ingestion** — queries benefit indirectly from more precise entity descriptions and graph structure
 - Changing entity types requires **re-ingestion** of existing documents to take effect
+- **Important: entity types and extraction examples are coupled.** The few-shot examples in `lightrag/prompt.py` show the LLM how to extract entities using specific types. The current examples use Hebrew legal types (contractparty, court, statute, etc.). If you change entity types for a different domain, you must also update the examples in `prompt.py` to match — otherwise the LLM sees contradictory instructions (header says your types, examples show legal types)
 
 ### How the user prompt works
 - The server reads `config.md` at startup
