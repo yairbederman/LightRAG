@@ -54,3 +54,6 @@ Add to `ENTITY_TYPES` env var or config:
 - [ ] Rejected
 
 Notes: Applied 2026-04-06. Entity types managed via config.md (Extraction section). Affects ingestion only (extraction prompt) — queries benefit indirectly via better entity descriptions and graph structure. Existing documents need re-ingestion to benefit. SETUP.md updated with per-client domain configuration phase (Phase 6b).
+
+**Commits:** `36b68c14` (implementation + optimization plan), `7d320527` (coupling warning)
+**Rollback:** `git revert 7d320527 36b68c14`

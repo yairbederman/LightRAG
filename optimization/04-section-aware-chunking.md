@@ -55,3 +55,6 @@ RAG-Anything uses page-boundary awareness with content-type-specific templates a
 - [ ] Rejected
 
 Notes: Applied 2026-04-06. Implemented `chunking_by_paragraph_aware` in `operate.py` as drop-in replacement. Splits on `\n\n` paragraph boundaries, groups paragraphs up to token limit, falls back to token splitting for oversized paragraphs. Set as new default in `lightrag.py`. Works on all document types regardless of structure. Existing documents need re-ingestion to benefit.
+
+**Commit:** `61c8c1aa`
+**Rollback:** `git revert 61c8c1aa`
