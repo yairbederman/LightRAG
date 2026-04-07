@@ -58,7 +58,7 @@ The undersigned hereby confirms...
 ## Decision
 
 - [ ] Approved
-- [ ] Deferred
+- [x] Deferred
 - [ ] Rejected
 
-Notes:
+Notes: Skipped 2026-04-06. Depends on #5 (table extraction) for full value. Without table detection, only distinguishes pypdf vs OCR text. Revisit after #5 is implemented.

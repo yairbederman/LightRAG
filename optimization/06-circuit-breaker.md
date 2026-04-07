@@ -48,7 +48,7 @@ States:
 ## Decision
 
 - [ ] Approved
-- [ ] Deferred
+- [x] Deferred
 - [ ] Rejected
 
-Notes:
+Notes: Discussed 2026-04-06. User deferred — retry decorators are spread across 17+ files, integration is invasive. Revisit when service outages become a problem.

@@ -51,7 +51,7 @@ Two-layer approach:
 ## Decision
 
 - [ ] Approved (Option: ___)
-- [ ] Deferred
+- [x] Deferred
 - [ ] Rejected
 
-Notes:
+Notes: Discussed 2026-04-06. Recommended Option B (pdfplumber). Impact analysis: only affects text-layer pages with tables, no regression on scanned/OCR/mixed PDFs. User deferred — revisit when table-heavy documents become a priority.

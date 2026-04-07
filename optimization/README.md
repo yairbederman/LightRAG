@@ -12,10 +12,10 @@ Dimensions evaluated: feature completeness, token efficiency, RAG accuracy (Engl
 | 2 | [Add legal entity types](02-legal-entity-types.md) | High | Low | Minutes | Done |
 | 3 | [Hebrew few-shot prompts](03-hebrew-prompts.md) | High | Low | Hours | Done |
 | 4 | [Section-aware chunking](04-section-aware-chunking.md) | High | Medium | Days | Done |
-| 5 | [Table-aware PDF extraction](05-table-extraction.md) | High | Medium | Days | Pending |
-| 6 | [Circuit breaker](06-circuit-breaker.md) | Medium | Low | Hours | Pending |
-| 7 | [Layout-aware OCR](07-layout-aware-ocr.md) | High | High | Weeks | Pending |
-| 8 | [Content-type chunk templates](08-chunk-templates.md) | Medium | Low | Hours | Pending |
+| 5 | [Table-aware PDF extraction](05-table-extraction.md) | High | Medium | Days | Deferred |
+| 6 | [Circuit breaker](06-circuit-breaker.md) | Medium | Low | Hours | Deferred |
+| 7 | [Layout-aware OCR](07-layout-aware-ocr.md) | High | High | Weeks | Deferred |
+| 8 | [Content-type chunk templates](08-chunk-templates.md) | Medium | Low | Hours | Deferred |
 
 ## Not Recommended (low value for legal use case)
 

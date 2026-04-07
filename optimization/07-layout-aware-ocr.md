@@ -47,7 +47,7 @@ Current OCR (GCV `document_text_detection`) returns raw text without layout info
 ## Decision
 
 - [ ] Approved (Option: ___)
-- [ ] Deferred
+- [x] Deferred
 - [ ] Rejected
 
-Notes:
+Notes: Skipped 2026-04-06. High risk, heavy dependencies, uncertain Hebrew layout model support. Revisit when multi-column court decisions become a priority.
