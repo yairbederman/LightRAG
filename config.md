@@ -1,13 +1,13 @@
 # System Configuration
+#
+# Technical settings for the LightRAG server.
+# For business-domain settings (language, entity types, extraction examples, user prompt),
+# see domain.md.
 
 ## Display
 
 - Title: LightRAG
 - Description: Graph Based RAG System
-
-## Language
-
-- Summary Language: Hebrew
 
 ## Model
 
@@ -23,10 +23,6 @@
 
 - Page Text Threshold: 50
 
-## Extraction
-
-- Entity Types: ["Person","Organization","Location","ContractParty","LegalClause","Obligation","Deadline","Court","Statute","LegalTerm","Monetary"]
-
 ## Concurrency
 
 <!-- Supabase Nano pooler has 15 connection slots total.
@@ -37,10 +33,3 @@
 
 - Max Parallel Insert: 1
 - Max DB Connections: 3
-
-## User Prompt
-
-You are answering questions about legal documents. Accuracy is paramount.
-If uncertain about any detail, say so explicitly.
-Never paraphrase legal clauses — quote them directly.
-Always cite the specific document and section when possible.

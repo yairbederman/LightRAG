@@ -35,7 +35,6 @@ def _apply_config_md(path: str = "config.md") -> None:
         env_map = {
             ("Display", "Title"): "WEBUI_TITLE",
             ("Display", "Description"): "WEBUI_DESCRIPTION",
-            ("Language", "Summary Language"): "SUMMARY_LANGUAGE",
             ("Model", "LLM Model"): "LLM_MODEL",
             ("Model", "Rerank Binding"): "RERANK_BINDING",
             ("Chunking", "Chunk Size"): "CHUNK_SIZE",
@@ -43,7 +42,7 @@ def _apply_config_md(path: str = "config.md") -> None:
             ("OCR", "Page Text Threshold"): "OCR_PAGE_TEXT_THRESHOLD",
             ("Concurrency", "Max Parallel Insert"): "MAX_PARALLEL_INSERT",
             ("Concurrency", "Max DB Connections"): "POSTGRES_MAX_CONNECTIONS",
-            ("Extraction", "Entity Types"): "ENTITY_TYPES",
+            # Language and Entity Types moved to domain.md (loaded by domain_config.py)
         }
         for section_text in re.split(r"\n## ", content):
             if not section_text.strip():

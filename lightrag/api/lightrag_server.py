@@ -58,7 +58,6 @@ _config_md = _load_config_md_early()
 _env_map = {
     ("Display", "Title"): "WEBUI_TITLE",
     ("Display", "Description"): "WEBUI_DESCRIPTION",
-    ("Language", "Summary Language"): "SUMMARY_LANGUAGE",
     ("Model", "LLM Model"): "LLM_MODEL",
     ("Model", "Rerank Binding"): "RERANK_BINDING",
     ("Chunking", "Chunk Size"): "CHUNK_SIZE",
@@ -72,12 +71,24 @@ for (_sec, _key), _env in _env_map.items():
     if isinstance(_section, dict) and _key in _section:
         _os.environ[_env] = _section[_key]
 
-# Extract user prompt for query injection
-default_user_prompt = (
-    _config_md.get("User Prompt")
-    if isinstance(_config_md.get("User Prompt"), str)
-    else None
-)
+# --- Load domain.md (business-domain configuration) ---
+from lightrag.api.domain_config import load_domain_config as _load_domain_config
+
+_domain_examples, _domain_user_prompt = _load_domain_config()
+
+# Override extraction examples from domain.md if provided
+if _domain_examples:
+    from lightrag.prompt import PROMPTS as _PROMPTS
+    _PROMPTS["entity_extraction_examples"] = _domain_examples
+
+# User prompt: domain.md takes precedence, then config.md, then None
+default_user_prompt = _domain_user_prompt
+if default_user_prompt is None:
+    default_user_prompt = (
+        _config_md.get("User Prompt")
+        if isinstance(_config_md.get("User Prompt"), str)
+        else None
+    )
 
 # --- End config.md early loading ---
 
